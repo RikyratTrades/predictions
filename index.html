@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Predictions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #bb86fc;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: 1px solid #bb86fc;
+            background-color: #2c2c2c;
+            color: #ffffff;
+        }
+        .form-group input[type="file"] {
+            padding: 3px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #bb86fc;
+            color: #ffffff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3700b3;
+        }
+        h1, h2 {
+            color: #bb86fc;
+        }
+        .card {
+            border: 1px solid #bb86fc;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            background-color: #2c2c2c;
+            display: flex;
+            flex-direction: column;
+        }
+        .card img {
+            width: 100px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .card p {
+            margin: 5px 0;
+        }
+        .form-group textarea {
+            resize: vertical;
+        }
+        .card-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .card-actions button {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .card-actions button:last-child {
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trading Predictions</h1>
+        <form id="prediction-form">
+            <div class="form-group">
+                <label for="image">Image</label>
+                <input type="file" id="image" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="pair">Trading Pair</label>
+                <input type="text" id="pair" required>
+            </div>
+            <div class="form-group">
+                <label for="strategy">Strategy</label>
+                <input type="text" id="strategy" required>
+            </div>
+            <div class="form-group">
+                <label for="current-price">Current Price</label>
+                <input type="number" id="current-price" step="0.00001" required>
+            </div>
+            <div class="form-group">
+                <label for="target-price">Target Price</label>
+                <input type="number" id="target-price" step="0.00001" required>
+            </div>
+            <div class="form-group">
+                <label for="reason">Reason (optional)</label>
+                <textarea id="reason"></textarea>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
+        <h2>Predictions</h2>
+        <div id="predictions"></div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const imageInput = document.getElementById('image');
+            const pair = document.getElementById('pair').value;
+            const strategy = document.getElementById('strategy').value;
+            const currentPrice = document.getElementById('current-price').value;
+            const targetPrice = document.getElementById('target-price').value;
+            const reason = document.getElementById('reason').value;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const image = e.target.result;
+                const prediction = {
+                    image,
+                    pair,
+                    strategy,
+                    currentPrice,
+                    targetPrice,
+                    reason,
+                    dateTime: new Date().toLocaleString(),
+                    id: Date.now(),
+                    review: null
+                };
+
+                let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
+                predictions.push(prediction);
+                localStorage.setItem('predictions', JSON.stringify(predictions));
+
+                displayPredictions();
+            };
+            reader.readAsDataURL(imageInput.files[0]);
+        });
+
+        function displayPredictions() {
+            const predictionsContainer = document.getElementById('predictions');
+            predictionsContainer.innerHTML = '';
+
+            let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
+
+            predictions.forEach(prediction => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <img src="${prediction.image}" alt="${prediction.pair}">
+                    <p><strong>Pair:</strong> ${prediction.pair}</p>
+                    <p><strong>Strategy:</strong> ${prediction.strategy}</p>
+                    <p><strong>Current Price:</strong> ${prediction.currentPrice}</p>
+                    <p><strong>Target Price:</strong> ${prediction.targetPrice}</p>
+                    ${prediction.reason ? `<p><strong>Reason:</strong> ${prediction.reason}</p>` : ''}
+                    <p><strong>Date & Time:</strong> ${prediction.dateTime}</p>
+                    ${prediction.review ? `
+                    <p><strong>Result:</strong> ${prediction.review.result}</p>
+                    <p><strong>Review Reason:</strong> ${prediction.review.reason}</p>
+                    <p><strong>Suggestion/Improvement:</strong> ${prediction.review.suggestion}</p>
+                    <p><strong>Status:</strong> Verified</p>
+                    ` : `
+                    <form onsubmit="return reviewPrediction(${prediction.id});">
+                        <label>
+                            <input type="radio" name="result-${prediction.id}" value="true" required> True
+                        </label>
+                        <label>
+                            <input type="radio" name="result-${prediction.id}" value="false" required> False
+                        </label>
+                        <label>
+                            <input type="radio" name="result-${prediction.id}" value="complicated" required> Complicated
+                        </label>
+                        <div class="form-group">
+                            <label for="review-reason-${prediction.id}">Review Reason</label>
+                            <textarea id="review-reason-${prediction.id}" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="review-suggestion-${prediction.id}">Suggestion/Improvement</label>
+                            <textarea id="review-suggestion-${prediction.id}"></textarea>
+                        </div>
+                        <button type="submit">Review</button>
+                    </form>
+                    `}
+                    <div class="card-actions">
+                        <button onclick="deletePrediction(${prediction.id})">Delete</button>
+                    </div>
+                `;
+                predictionsContainer.appendChild(div);
+            });
+        }
+
+        function reviewPrediction(id) {
+            const result = document.querySelector(`input[name="result-${id}"]:checked`).value;
+            const reason = document.getElementById(`review-reason-${id}`).value;
+            const suggestion = document.getElementById(`review-suggestion-${id}`).value;
+
+            let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
+            const prediction = predictions.find(pred => pred.id === id);
+            prediction.review = {
+                result,
+                reason,
+                suggestion
+            };
+
+            localStorage.setItem('predictions', JSON.stringify(predictions));
+
+            displayPredictions();
+
+            return false;
+        }
+
+        function deletePrediction(id) {
+            let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
+            predictions = predictions.filter(pred => pred.id !== id);
+            localStorage.setItem('predictions', JSON.stringify(predictions));
+
+            displayPredictions();
+        }
+
+        window.onload = function() {
+            displayPredictions();
+        };
+    </script>
+</body>
+</html>
