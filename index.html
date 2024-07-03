@@ -64,7 +64,7 @@
             flex-direction: column;
         }
         .card img {
-            width: 100px;
+            width: 250px;
             display: block;
             margin-bottom: 10px;
         }
@@ -85,6 +85,23 @@
         }
         .card-actions button:last-child {
             margin-right: 0;
+        }
+        .radio-group label {
+            margin-right: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .radio-group input[type="radio"]:checked + label {
+            background-color: #3700b3;
+        }
+        .radio-group input[type="radio"][value="true"]:checked + label {
+            background-color: green;
+        }
+        .radio-group input[type="radio"][value="false"]:checked + label {
+            background-color: red;
+        }
+        .radio-group input[type="radio"][value="complicated"]:checked + label {
+            background-color: grey;
         }
     </style>
 </head>
@@ -146,7 +163,8 @@
                     reason,
                     dateTime: new Date().toLocaleString(),
                     id: Date.now(),
-                    review: null
+                    review: null,
+                    resultImage: null
                 };
 
                 let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
@@ -176,21 +194,25 @@
                     ${prediction.reason ? `<p><strong>Reason:</strong> ${prediction.reason}</p>` : ''}
                     <p><strong>Date & Time:</strong> ${prediction.dateTime}</p>
                     ${prediction.review ? `
+                    <img src="${prediction.resultImage}" alt="Result Image">
                     <p><strong>Result:</strong> ${prediction.review.result}</p>
                     <p><strong>Review Reason:</strong> ${prediction.review.reason}</p>
                     <p><strong>Suggestion/Improvement:</strong> ${prediction.review.suggestion}</p>
                     <p><strong>Status:</strong> Verified</p>
                     ` : `
-                    <form onsubmit="return reviewPrediction(${prediction.id});">
-                        <label>
-                            <input type="radio" name="result-${prediction.id}" value="true" required> True
-                        </label>
-                        <label>
-                            <input type="radio" name="result-${prediction.id}" value="false" required> False
-                        </label>
-                        <label>
-                            <input type="radio" name="result-${prediction.id}" value="complicated" required> Complicated
-                        </label>
+                    <form onsubmit="return reviewPrediction(${prediction.id});" enctype="multipart/form-data">
+                        <div class="radio-group">
+                            <input type="radio" id="result-true-${prediction.id}" name="result-${prediction.id}" value="true" required>
+                            <label for="result-true-${prediction.id}">True</label>
+                            <input type="radio" id="result-false-${prediction.id}" name="result-${prediction.id}" value="false" required>
+                            <label for="result-false-${prediction.id}">False</label>
+                            <input type="radio" id="result-complicated-${prediction.id}" name="result-${prediction.id}" value="complicated" required>
+                            <label for="result-complicated-${prediction.id}">Complicated</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="result-image-${prediction.id}">Result Image</label>
+                            <input type="file" id="result-image-${prediction.id}" accept="image/*" required>
+                        </div>
                         <div class="form-group">
                             <label for="review-reason-${prediction.id}">Review Reason</label>
                             <textarea id="review-reason-${prediction.id}" required></textarea>
@@ -214,18 +236,26 @@
             const result = document.querySelector(`input[name="result-${id}"]:checked`).value;
             const reason = document.getElementById(`review-reason-${id}`).value;
             const suggestion = document.getElementById(`review-suggestion-${id}`).value;
+            const resultImageInput = document.getElementById(`result-image-${id}`);
 
-            let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
-            const prediction = predictions.find(pred => pred.id === id);
-            prediction.review = {
-                result,
-                reason,
-                suggestion
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const resultImage = e.target.result;
+
+                let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
+                const prediction = predictions.find(pred => pred.id === id);
+                prediction.review = {
+                    result,
+                    reason,
+                    suggestion
+                };
+                prediction.resultImage = resultImage;
+
+                localStorage.setItem('predictions', JSON.stringify(predictions));
+
+                displayPredictions();
             };
-
-            localStorage.setItem('predictions', JSON.stringify(predictions));
-
-            displayPredictions();
+            reader.readAsDataURL(resultImageInput.files[0]);
 
             return false;
         }
