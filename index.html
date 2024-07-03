@@ -137,6 +137,21 @@
         </form>
 
         <h2>Predictions</h2>
+        <div class="form-group">
+            <label for="filter-strategy">Filter by Strategy</label>
+            <select id="filter-strategy">
+                <option value="">All</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="filter-result">Filter by Result</label>
+            <select id="filter-result">
+                <option value="">All</option>
+                <option value="true">True</option>
+                <option value="false">False</option>
+                <option value="complicated">Complicated</option>
+            </select>
+        </div>
         <div id="predictions"></div>
     </div>
 
@@ -172,6 +187,7 @@
                 localStorage.setItem('predictions', JSON.stringify(predictions));
 
                 displayPredictions();
+                updateFilterOptions();
             };
             reader.readAsDataURL(imageInput.files[0]);
         });
@@ -181,6 +197,16 @@
             predictionsContainer.innerHTML = '';
 
             let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
+
+            const filterStrategy = document.getElementById('filter-strategy').value;
+            const filterResult = document.getElementById('filter-result').value;
+
+            predictions = predictions.filter(prediction => {
+                return (filterStrategy === '' || prediction.strategy === filterStrategy) &&
+                       (filterResult === '' || (prediction.review && prediction.review.result === filterResult));
+            });
+
+            predictions.sort((a, b) => b.id - a.id);
 
             predictions.forEach(prediction => {
                 const div = document.createElement('div');
@@ -268,8 +294,26 @@
             displayPredictions();
         }
 
+        function updateFilterOptions() {
+            let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
+
+            const strategies = [...new Set(predictions.map(pred => pred.strategy))];
+            const filterStrategy = document.getElementById('filter-strategy');
+            filterStrategy.innerHTML = '<option value="">All</option>';
+            strategies.forEach(strategy => {
+                const option = document.createElement('option');
+                option.value = strategy;
+                option.textContent = strategy;
+                filterStrategy.appendChild(option);
+            });
+        }
+
+        document.getElementById('filter-strategy').addEventListener('change', displayPredictions);
+        document.getElementById('filter-result').addEventListener('change', displayPredictions);
+
         window.onload = function() {
             displayPredictions();
+            updateFilterOptions();
         };
     </script>
 </body>
