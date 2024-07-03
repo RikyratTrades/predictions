@@ -28,7 +28,7 @@
             margin-bottom: 5px;
             color: #bb86fc;
         }
-        .form-group input, .form-group textarea {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
@@ -38,7 +38,7 @@
             color: #ffffff;
         }
         .form-group input[type="file"] {
-            padding: 3px;
+            padding: 5px;
         }
         button {
             padding: 10px 20px;
@@ -47,6 +47,7 @@
             background-color: #bb86fc;
             color: #ffffff;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
         button:hover {
             background-color: #3700b3;
@@ -64,9 +65,10 @@
             flex-direction: column;
         }
         .card img {
-            width: 700px;
+            width: 100%;
             display: block;
             margin-bottom: 10px;
+            border-radius: 5px;
         }
         .card p {
             margin: 5px 0;
@@ -102,6 +104,23 @@
         }
         .radio-group input[type="radio"][value="complicated"]:checked + label {
             background-color: grey;
+        }
+        select {
+            background: #2c2c2c;
+            color: #bb86fc;
+            padding: 10px;
+            border: 1px solid #bb86fc;
+            border-radius: 5px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16"%3E%3Cpath d="M7.247 11.14l-4.796-5.481c-.566-.646-.106-1.659.747-1.659h9.59c.853 0 1.313 1.013.747 1.659l-4.796 5.481a1 1 0 0 1-1.482 0z"/%3E%3C/svg%3E');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        select:focus {
+            outline: none;
+            border-color: #3700b3;
         }
     </style>
 </head>
